@@ -36,4 +36,3 @@ build/
 todo.txt
 application.properties
 application-dev.properties
-.mvn/
