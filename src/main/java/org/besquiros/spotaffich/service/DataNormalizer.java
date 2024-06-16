@@ -1,5 +1,6 @@
 package org.besquiros.spotaffich.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.besquiros.spotaffich.entity.GeoPoint;
 import org.springframework.stereotype.Service;
 
@@ -10,11 +11,15 @@ import java.util.Map;
 @Service
 public class DataNormalizer {
 
-   public List<GeoPoint> normalizeData(String apiName, List<Map<String,Object>> data) {
-       List<GeoPoint> dataNormalized = new ArrayList<>();
+    public static List<GeoPoint> normalizeData(String cityName, JsonNode data) {
+        List<GeoPoint> dataNormalized = new ArrayList<>();
+        switch (cityName.toUpperCase()) {
+            case "BORDEAUX":
+                for (JsonNode result : data.get("results")) {
+                    dataNormalized.add(new GeoPoint(result.get("geo_point_2d").get("lat").asDouble(), result.get("geo_point_2d").get("lon").asDouble()));
+                }
+        }
 
-
-
-       return dataNormalized;
-   }
+        return dataNormalized;
+    }
 }

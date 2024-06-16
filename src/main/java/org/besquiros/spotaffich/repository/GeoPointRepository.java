@@ -4,8 +4,8 @@ import org.besquiros.spotaffich.entity.GeoPoint;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 
 @Repository
-public interface GeoPointRepository extends JpaRepository<BigDecimal, GeoPoint> {
+public interface GeoPointRepository extends JpaRepository<GeoPoint, BigInteger> {
 }
