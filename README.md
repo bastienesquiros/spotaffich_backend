@@ -1,4 +1,4 @@
 # spotaffich
-Localiser les spots d'affichage publique en France
+Locate public display spots in France
 
 # Build In Public
