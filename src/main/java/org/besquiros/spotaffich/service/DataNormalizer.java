@@ -13,9 +13,11 @@ public class DataNormalizer {
 
     public static List<GeoPoint> normalizeData(String cityName, JsonNode data) {
         List<GeoPoint> dataNormalized = new ArrayList<>();
+        JsonNode APIResultNode;
         switch (cityName.toUpperCase()) {
             case "BORDEAUX":
-                for (JsonNode result : data.get("results")) {
+                APIResultNode = data.get("results");
+                for (JsonNode result : APIResultNode) {
                     dataNormalized.add(new GeoPoint(result.get("geo_point_2d").get("lat").asDouble(), result.get("geo_point_2d").get("lon").asDouble()));
                 }
         }

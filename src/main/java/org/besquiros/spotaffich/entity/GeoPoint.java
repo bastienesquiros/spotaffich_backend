@@ -24,7 +24,7 @@ public class GeoPoint {
     private double longitude;
     private String address;
     private String picturePath;
-    private Date creationDate;
+    private Date creationDate = new Date();
     private Date updateDate;
 
     public GeoPoint(double latitude, double longitude) {

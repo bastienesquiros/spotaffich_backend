@@ -10,7 +10,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 
 @Service
@@ -26,6 +25,7 @@ public class GeoPointService {
     // TODO: Add the most possible APIs
     public void fetchAllGeoPoint() {
         String url;
+        List<List<GeoPoint>> dataToPersist = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
         JsonNode callResult;
         String cityName = "";
@@ -34,14 +34,14 @@ public class GeoPointService {
             url = "https://opendata.bordeaux-metropole.fr/api/explore/v2.1/catalog/datasets/bor_sigpanneaux/records";
             callResult = restTemplate.getForObject(url, JsonNode.class);
             if (callResult != null && !callResult.isEmpty()) {
-                geoPointRepository.saveAll(DataNormalizer.normalizeData(cityName, callResult));
+                dataToPersist.add(DataNormalizer.normalizeData(cityName, callResult));
             } else {
                 logger.warn("No data found for city: " + cityName);
             }
         } catch (Exception e) {
-            logger.error("Error happened during API call for city: " + cityName + e);
+            logger.error("Error happened data handling for city: " + cityName + " " + e);
         }
     }
-
+// TODO: Add a method that compares fetched and current bdd state to remove inactive GeoPoints and insert new ones;
 
 }
