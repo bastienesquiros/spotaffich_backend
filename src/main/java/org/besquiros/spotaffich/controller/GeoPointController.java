@@ -15,7 +15,7 @@ public class GeoPointController {
         this.geoPointService = geoPointService;
     }
 
-    @GetMapping("/test")
+    @GetMapping("/test") // TODO: REFACTO
     public void test() {
     geoPointService.fetchAllGeoPoint();
     }

@@ -5,9 +5,22 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.besquiros.spotaffich.entity.GeoPoint;
 import org.besquiros.spotaffich.repository.GeoPointRepository;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 
@@ -17,8 +30,11 @@ public class GeoPointService {
     static final Logger logger = LogManager.getLogger(GeoPointService.class);
     private final GeoPointRepository geoPointRepository;
 
-    public GeoPointService(GeoPointRepository geoPointRepository) {
+    private final Environment env;
+
+    public GeoPointService(GeoPointRepository geoPointRepository, Environment env) {
         this.geoPointRepository = geoPointRepository;
+        this.env = env;
     }
 
     // TODO: Add the most possible APIs
@@ -89,6 +105,62 @@ public class GeoPointService {
         if (!pointsToDelete.isEmpty()) {
             geoPointRepository.deleteAll(pointsToDelete);
         }
+        populateGeoPointAddress();
+        retrieveGeoPointStreetPicture();
     }
 
+    public void populateGeoPointAddress() {
+        List<GeoPoint> geoPointList = geoPointRepository.findAll();
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", env.getProperty("RADAR_API_KEY"));
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        for (GeoPoint geoPoint : geoPointList) {
+            if (geoPoint.getAddress() == null || geoPoint.getAddress().isEmpty()) {
+                String url = String.format("https://api.radar.io/v1/geocode/reverse?coordinates=%f,%f", geoPoint.getLatitude(), geoPoint.getLongitude());
+
+                try {
+                    ResponseEntity<JsonNode> response = restTemplate.exchange(url, HttpMethod.GET, entity, JsonNode.class);
+
+                    if (response.getBody() != null && !response.getBody().isEmpty()) {
+                        geoPoint.setAddress(response.getBody().get("addresses").get(0).get("formattedAddress").asText());
+                    }
+                } catch (Exception e) {
+                    logger.error("Error during RADAR.IO API call: " + e.getMessage());
+                }
+                geoPointRepository.save(geoPoint);
+            }
+        }
+    }
+
+    // TODO: Change save path IN PROD
+    public void retrieveGeoPointStreetPicture() {
+        List<GeoPoint> geoPointList = geoPointRepository.findAll();
+        RestTemplate restTemplate = new RestTemplate();
+
+        for (GeoPoint geoPoint : geoPointList) {
+            try {
+                String url = String.format("https://maps.googleapis.com/maps/api/streetview?location=%f,%f&return_error_code=true&size=600x400&key=%s", geoPoint.getLatitude(), geoPoint.getLongitude(), env.getProperty("GOOGLE_API_KEY"));
+                ResponseEntity<byte[]> response = restTemplate.getForEntity(url, byte[].class);
+                if (!response.getStatusCode().equals(400)) {
+                    try {
+                        byte[] imageBytes = response.getBody();
+                        File pictureToSave = new File(env.getProperty("picture_folder") + geoPoint.getId() + ".jpg");
+                        FileOutputStream fos = new FileOutputStream(pictureToSave);
+                        fos.write(imageBytes);
+                        fos.close();
+                        geoPoint.setPicturePath(pictureToSave.getPath());
+                        geoPointRepository.save(geoPoint);
+                    } catch (Exception e) {
+                        logger.error("Error while creating StreetView picture");
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Error during Google Maps API call: " + e.getMessage());
+            }
+        }
+
+
+    }
 }
