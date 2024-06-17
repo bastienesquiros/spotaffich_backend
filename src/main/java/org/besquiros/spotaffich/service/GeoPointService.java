@@ -64,7 +64,6 @@ public class GeoPointService {
         if (allCallsDone) {
             persistGeoPoint(dataToPersist);
         }
-
     }
 
 
@@ -140,27 +139,27 @@ public class GeoPointService {
         RestTemplate restTemplate = new RestTemplate();
 
         for (GeoPoint geoPoint : geoPointList) {
-            try {
-                String url = String.format("https://maps.googleapis.com/maps/api/streetview?location=%f,%f&return_error_code=true&size=600x400&key=%s", geoPoint.getLatitude(), geoPoint.getLongitude(), env.getProperty("GOOGLE_API_KEY"));
-                ResponseEntity<byte[]> response = restTemplate.getForEntity(url, byte[].class);
-                if (!response.getStatusCode().equals(400)) {
-                    try {
-                        byte[] imageBytes = response.getBody();
-                        File pictureToSave = new File(env.getProperty("picture_folder") + geoPoint.getId() + ".jpg");
-                        FileOutputStream fos = new FileOutputStream(pictureToSave);
-                        fos.write(imageBytes);
-                        fos.close();
-                        geoPoint.setPicturePath(pictureToSave.getPath());
-                        geoPointRepository.save(geoPoint);
-                    } catch (Exception e) {
-                        logger.error("Error while creating StreetView picture");
+            if (geoPoint.getPicturePath() == null || geoPoint.getPicturePath().isEmpty()) {
+                try {
+                    String url = String.format("https://maps.googleapis.com/maps/api/streetview?location=%f,%f&return_error_code=true&size=600x400&key=%s", geoPoint.getLatitude(), geoPoint.getLongitude(), env.getProperty("GOOGLE_API_KEY"));
+                    ResponseEntity<byte[]> response = restTemplate.getForEntity(url, byte[].class);
+                    if (!response.getStatusCode().equals(400)) {
+                        try {
+                            byte[] imageBytes = response.getBody();
+                            File pictureToSave = new File(env.getProperty("picture_folder") + geoPoint.getId() + ".jpg");
+                            FileOutputStream fos = new FileOutputStream(pictureToSave);
+                            fos.write(imageBytes);
+                            fos.close();
+                            geoPoint.setPicturePath(pictureToSave.getPath());
+                            geoPointRepository.save(geoPoint);
+                        } catch (Exception e) {
+                            logger.error("Error while creating StreetView picture");
+                        }
                     }
+                } catch (Exception e) {
+                    logger.error("Error during Google Maps API call: " + e.getMessage());
                 }
-            } catch (Exception e) {
-                logger.error("Error during Google Maps API call: " + e.getMessage());
             }
         }
-
-
     }
 }
