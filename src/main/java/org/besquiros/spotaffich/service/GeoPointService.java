@@ -21,7 +21,7 @@ import java.util.*;
 @Service
 public class GeoPointService {
 
-    static final Logger logger = LogManager.getLogger(GeoPointService.class);
+    private static final Logger logger = LogManager.getLogger(GeoPointService.class);
     private final GeoPointRepository geoPointRepository;
 
     private final Environment env;
