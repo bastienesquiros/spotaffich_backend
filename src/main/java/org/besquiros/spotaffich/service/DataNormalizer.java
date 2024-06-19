@@ -9,14 +9,17 @@ import java.util.List;
 
 @Service
 public class DataNormalizer {
+    private DataNormalizer() {
+    }
+
 
     public static List<GeoPoint> normalizeData(String cityName, JsonNode data) {
         List<GeoPoint> dataNormalized = new ArrayList<>();
-        JsonNode APIResultNode;
+        JsonNode apiResultNode;
         switch (cityName.toUpperCase()) {
             case "BORDEAUX":
-                APIResultNode = data.get("results");
-                for (JsonNode result : APIResultNode) {
+                apiResultNode = data.get("results");
+                for (JsonNode result : apiResultNode) {
                     dataNormalized.add(new GeoPoint(result.get("geo_point_2d").get("lat").asDouble(), result.get("geo_point_2d").get("lon").asDouble()));
                 }
         }

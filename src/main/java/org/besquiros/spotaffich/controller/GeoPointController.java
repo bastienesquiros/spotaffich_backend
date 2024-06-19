@@ -15,7 +15,7 @@ public class GeoPointController {
         this.geoPointService = geoPointService;
     }
 
-    @GetMapping("/test") // TODO: REFACTO
+    @GetMapping("/testFetchGeoPoint") // TODO: A SUPPRIMER ET REMPLACER PAR UNE TACHE AUTOMATIQUE
     public void test() {
     geoPointService.fetchAllGeoPoint();
     }

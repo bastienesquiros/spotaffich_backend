@@ -12,15 +12,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 
@@ -44,7 +38,7 @@ public class GeoPointService {
         RestTemplate restTemplate = new RestTemplate();
         JsonNode callResult;
         String cityName = "";
-        Boolean allCallsDone = true;
+        boolean allCallsDone = true;
         try {
             // TODO: Verify dataset integrity for BORDEAUX
             cityName = "BORDEAUX";
@@ -143,7 +137,7 @@ public class GeoPointService {
                 try {
                     String url = String.format("https://maps.googleapis.com/maps/api/streetview?location=%f,%f&return_error_code=true&size=600x400&key=%s", geoPoint.getLatitude(), geoPoint.getLongitude(), env.getProperty("GOOGLE_API_KEY"));
                     ResponseEntity<byte[]> response = restTemplate.getForEntity(url, byte[].class);
-                    if (!response.getStatusCode().equals(400)) {
+                    if (response.getStatusCode().value() != 400) {
                         try {
                             byte[] imageBytes = response.getBody();
                             File pictureToSave = new File(env.getProperty("picture_folder") + geoPoint.getId() + ".jpg");
