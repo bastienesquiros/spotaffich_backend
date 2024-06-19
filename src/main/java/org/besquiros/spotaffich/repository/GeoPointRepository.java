@@ -6,6 +6,5 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigInteger;
 
-@Repository
 public interface GeoPointRepository extends JpaRepository<GeoPoint, BigInteger> {
 }

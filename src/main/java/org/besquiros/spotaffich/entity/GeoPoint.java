@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.util.Date;
 
 @Entity
@@ -24,12 +25,23 @@ public class GeoPoint {
     private double longitude;
     private String address;
     private String picturePath;
-    private Date creationDate = new Date();
-    private Date updateDate;
+    @Column(nullable = false, updatable = false)
+    private LocalDate creationDate;
+    private LocalDate updateDate;
 
     public GeoPoint(double latitude, double longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.creationDate = LocalDate.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updateDate = LocalDate.now();
     }
 
 }
