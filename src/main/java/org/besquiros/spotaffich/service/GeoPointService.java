@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.besquiros.spotaffich.entity.GeoPoint;
 import org.besquiros.spotaffich.repository.GeoPointRepository;
+import org.besquiros.spotaffich.util.GeoUtil;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -31,6 +32,7 @@ public class GeoPointService {
         this.env = env;
     }
 
+    // DOC
     // TODO: Add the most possible APIs
     public void fetchAllGeoPoint() {
         String url;
@@ -155,5 +157,20 @@ public class GeoPointService {
                 }
             }
         }
+    }
+
+    public List<GeoPoint> findUserProximityGeoPoint(double userLatitude, double userLongitude) {
+        // For now, we define proximity is equivalent to a 10KM radius, this can be easily tweaked in the future
+        GeoUtil.BoundingBox userCircularZone = GeoUtil.calculateBoundingBox(userLatitude, userLongitude, 10);
+
+        List<GeoPoint> databaseGeoPointList = geoPointRepository.findAllLatitudeAndLongitude();
+        List<GeoPoint> geoPointInRadiusList = new ArrayList<>();
+
+        for (GeoPoint geoPoint : databaseGeoPointList) {
+            if (GeoUtil.isPointInRadius(geoPoint.getLatitude(), geoPoint.getLongitude(), userCircularZone)) {
+                geoPointInRadiusList.add(geoPoint);
+            }
+        }
+        return geoPointInRadiusList;
     }
 }

@@ -2,12 +2,10 @@ package org.besquiros.spotaffich.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.besquiros.spotaffich.entity.GeoPoint;
-import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Service
 public class DataNormalizer {
     private DataNormalizer() {
     }
