@@ -13,7 +13,7 @@ public class ScheduledTask {
 
     private static final long THREE_MONTHS_IN_MILLISECONDS = 90L * 24L * 60L * 60L * 1000L;
     private static final Logger logger = LogManager.getLogger(ScheduledTask.class);
-    private GeoPointService geoPointService;
+    private final GeoPointService geoPointService;
 
     public ScheduledTask(GeoPointService geoPointService) {
         this.geoPointService = geoPointService;

@@ -27,7 +27,8 @@ public class GeoUtil {
         double maxLat = centerLatRadians + radiusRadians;
 
         // Correction for the latitude bounds
-        double minLon, maxLon;
+        double minLon;
+        double maxLon;
         if (minLat > Math.toRadians(-90) && maxLat < Math.toRadians(90)) {
             double deltaLon = Math.asin(Math.sin(radiusRadians) / Math.cos(centerLatRadians));
             minLon = centerLonRadians - deltaLon;

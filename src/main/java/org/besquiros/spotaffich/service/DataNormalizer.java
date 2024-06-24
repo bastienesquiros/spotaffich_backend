@@ -20,6 +20,13 @@ public class DataNormalizer {
                 for (JsonNode result : apiResultNode) {
                     dataNormalized.add(new GeoPoint(result.get("geo_point_2d").get("lat").asDouble(), result.get("geo_point_2d").get("lon").asDouble()));
                 }
+                break;
+            case "LE HAILAN":
+                apiResultNode = data.get("results");
+                for (JsonNode result : apiResultNode) {
+                    dataNormalized.add(new GeoPoint(result.get("geo_point").get("lat").asDouble(), result.get("geo_point").get("lon").asDouble()));
+                }
+                break;
         }
 
         return dataNormalized;

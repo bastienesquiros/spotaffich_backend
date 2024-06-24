@@ -32,34 +32,40 @@ public class GeoPointService {
         this.env = env;
     }
 
-    // DOC
     // TODO: Add the most possible APIs
     public void fetchAllGeoPoint() {
-        String url;
+        Map<String, String> citiesApisMap = populateCitiesApisMap();
         List<List<GeoPoint>> dataToPersist = new ArrayList<>();
         RestTemplate restTemplate = new RestTemplate();
         JsonNode callResult;
-        String cityName = "";
         boolean allCallsDone = true;
-        try {
-            // TODO: Verify dataset integrity for BORDEAUX
-            cityName = "BORDEAUX";
-            url = "https://opendata.bordeaux-metropole.fr/api/explore/v2.1/catalog/datasets/bor_sigpanneaux/records";
-            callResult = restTemplate.getForObject(url, JsonNode.class);
-            if (callResult != null && !callResult.isEmpty()) {
-                dataToPersist.add(DataNormalizer.normalizeData(cityName, callResult));
-            } else {
-                logger.warn("No data found for city: " + cityName);
-                allCallsDone = false;
-            }
-        } catch (Exception e) {
-            logger.error("Error happened data handling for city: " + cityName + " " + e);
-        }
-        // TODO: Add a method that compares fetched and current bdd state to remove inactive GeoPoints and insert new ones, call it only when this whole call went good;
 
+        for (Map.Entry<String, String> city : citiesApisMap.entrySet()) {
+            try {
+                callResult = restTemplate.getForObject(city.getValue(), JsonNode.class);
+                if (callResult != null && !callResult.isEmpty()) {
+                    dataToPersist.add(DataNormalizer.normalizeData(city.getKey(), callResult));
+                } else {
+                    logger.warn("No data found for city: " + city.getKey());
+                    allCallsDone = false;
+                }
+            } catch (Exception e) {
+                logger.error("Error happened data handling for city: " + city.getKey() + " " + e);
+                e.printStackTrace();
+                allCallsDone = false;
+
+            }
+        }
         if (allCallsDone) {
             persistGeoPoint(dataToPersist);
         }
+    }
+
+    private Map<String, String> populateCitiesApisMap() {
+        Map<String, String> citiesApisMap = new HashMap<>();
+        citiesApisMap.put("BORDEAUX", "https://opendata.bordeaux-metropole.fr/api/explore/v2.1/catalog/datasets/bor_sigpanneaux/records?limit=-1");
+        citiesApisMap.put("LE HAILAN", "https://opendata.bordeaux-metropole.fr/api/explore/v2.1/catalog/datasets/leh_panneaux_affichage_libre/records?limit=-1");
+        return citiesApisMap;
     }
 
 
