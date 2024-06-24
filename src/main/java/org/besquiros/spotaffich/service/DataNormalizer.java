@@ -27,6 +27,12 @@ public class DataNormalizer {
                     dataNormalized.add(new GeoPoint(result.get("geo_point").get("lat").asDouble(), result.get("geo_point").get("lon").asDouble()));
                 }
                 break;
+            case "TALENCE":
+                apiResultNode = data.get("results");
+                for (JsonNode result : apiResultNode) {
+                    dataNormalized.add(new GeoPoint(result.get("coordonnees_").get("lat").asDouble(), result.get("coordonnees_").get("lon").asDouble()));
+                }
+                break;
         }
 
         return dataNormalized;

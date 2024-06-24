@@ -69,6 +69,7 @@ public class GeoPointService {
         Map<String, String> citiesApisMap = new HashMap<>();
         citiesApisMap.put("BORDEAUX", "https://opendata.bordeaux-metropole.fr/api/explore/v2.1/catalog/datasets/bor_sigpanneaux/records?limit=-1");
         citiesApisMap.put("LE HAILAN", "https://opendata.bordeaux-metropole.fr/api/explore/v2.1/catalog/datasets/leh_panneaux_affichage_libre/records?limit=-1");
+        citiesApisMap.put("TALENCE", "https://opendata.bordeaux-metropole.fr/api/explore/v2.1/catalog/datasets/tal_panneaux_affichage_libre/records?limit=-1");
         return citiesApisMap;
     }
 
