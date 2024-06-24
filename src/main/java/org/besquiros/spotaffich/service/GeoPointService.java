@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.besquiros.spotaffich.entity.GeoPoint;
+import org.besquiros.spotaffich.entity.NoGeoPointInArea;
 import org.besquiros.spotaffich.repository.GeoPointRepository;
+import org.besquiros.spotaffich.repository.NoGeoPointInAreaRepository;
 import org.besquiros.spotaffich.util.GeoUtil;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
@@ -24,11 +26,13 @@ public class GeoPointService {
 
     private static final Logger logger = LogManager.getLogger(GeoPointService.class);
     private final GeoPointRepository geoPointRepository;
+    private final NoGeoPointInAreaRepository noGeoPointInAreaRepository;
 
     private final Environment env;
 
-    public GeoPointService(GeoPointRepository geoPointRepository, Environment env) {
+    public GeoPointService(GeoPointRepository geoPointRepository, Environment env, NoGeoPointInAreaRepository noGeoPointInAreaRepository) {
         this.geoPointRepository = geoPointRepository;
+        this.noGeoPointInAreaRepository = noGeoPointInAreaRepository;
         this.env = env;
     }
 
@@ -171,12 +175,20 @@ public class GeoPointService {
 
         List<GeoPoint> databaseGeoPointList = geoPointRepository.findAllLatitudeAndLongitude();
         List<GeoPoint> geoPointInRadiusList = new ArrayList<>();
-
         for (GeoPoint geoPoint : databaseGeoPointList) {
             if (GeoUtil.isPointInRadius(geoPoint.getLatitude(), geoPoint.getLongitude(), userCircularZone)) {
                 geoPointInRadiusList.add(geoPoint);
             }
         }
+
+        if (geoPointInRadiusList.isEmpty()) {
+            noGeoPointFoundInArea(userCircularZone);
+        }
+
         return geoPointInRadiusList;
+    }
+
+    private void noGeoPointFoundInArea(GeoUtil.BoundingBox noGeoPointZone) {
+        noGeoPointInAreaRepository.save(new NoGeoPointInArea(noGeoPointZone.minLatitude(), noGeoPointZone.maxLatitude(), noGeoPointZone.minLongitude(), noGeoPointZone.maxLongitude()));
     }
 }

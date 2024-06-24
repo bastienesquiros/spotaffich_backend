@@ -1,7 +1,9 @@
 package org.besquiros.spotaffich.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.math.BigInteger;
@@ -12,36 +14,30 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-@Getter
-@Setter
-@Table(name = "geo_point")
-public class GeoPoint {
+@Table(name = "no_geo_point_in_area")
+public class NoGeoPointInArea {
+
+    LocalDate date;
+    double minLatitude;
+    double maxLatitude;
+    double minLongitude;
+    double maxLongitude;
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private BigInteger id;
-    @Column(nullable = false)
-    private double latitude;
-    @Column(nullable = false)
-    private double longitude;
-    private String address;
-    private String picturePath;
-    @Column(nullable = false, updatable = false)
-    private LocalDate creationDate;
-    private LocalDate updateDate;
 
-    public GeoPoint(double latitude, double longitude) {
-        this.latitude = latitude;
-        this.longitude = longitude;
+
+    public NoGeoPointInArea(double minLatitude, double maxLatitude, double minLongitude, double maxLongitude) {
+        this.date = LocalDate.now();
+        this.minLatitude = minLatitude;
+        this.maxLatitude = maxLatitude;
+        this.minLongitude = minLongitude;
+        this.maxLongitude = maxLongitude;
     }
 
     @PrePersist
     protected void onCreate() {
-        this.creationDate = LocalDate.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updateDate = LocalDate.now();
+        this.date = LocalDate.now();
     }
 
     @Override
@@ -51,8 +47,8 @@ public class GeoPoint {
         Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        GeoPoint geoPoint = (GeoPoint) o;
-        return getId() != null && Objects.equals(getId(), geoPoint.getId());
+        NoGeoPointInArea that = (NoGeoPointInArea) o;
+        return id != null && Objects.equals(id, that.id);
     }
 
     @Override
