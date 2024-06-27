@@ -2,7 +2,6 @@ package org.besquiros.spotaffich.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.proxy.HibernateProxy;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -45,18 +44,15 @@ public class GeoPoint {
     }
 
     @Override
-    public final boolean equals(Object o) {
+    public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null) return false;
-        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
-        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
-        if (thisEffectiveClass != oEffectiveClass) return false;
+        if (o == null || getClass() != o.getClass()) return false;
         GeoPoint geoPoint = (GeoPoint) o;
-        return getId() != null && Objects.equals(getId(), geoPoint.getId());
+        return Double.compare(latitude, geoPoint.latitude) == 0 && Double.compare(longitude, geoPoint.longitude) == 0 && Objects.equals(id, geoPoint.id) && Objects.equals(address, geoPoint.address) && Objects.equals(picturePath, geoPoint.picturePath) && Objects.equals(creationDate, geoPoint.creationDate) && Objects.equals(updateDate, geoPoint.updateDate);
     }
 
     @Override
-    public final int hashCode() {
-        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    public int hashCode() {
+        return Objects.hash(id, latitude, longitude, address, picturePath, creationDate, updateDate);
     }
 }

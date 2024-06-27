@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URI;
 import java.net.URL;
 import java.util.*;
 
@@ -51,7 +52,7 @@ public class GeoPointService {
         boolean allDataRetrieved = true;
         for (City city : cityList) {
             try {
-                URL downloadDataURL = new URL(city.getDataDownloadLink());
+                URL downloadDataURL = new URI(city.getDataDownloadLink()).toURL();
                 Reader dataReader = new InputStreamReader(downloadDataURL.openStream());
                 CSVFormat csvFormat = CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).setDelimiter(';').setTrim(true).build();
                 CSVParser csvParser = new CSVParser(dataReader, csvFormat);

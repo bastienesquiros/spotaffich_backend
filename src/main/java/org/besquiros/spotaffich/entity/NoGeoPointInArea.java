@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.hibernate.proxy.HibernateProxy;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -41,18 +40,15 @@ public class NoGeoPointInArea {
     }
 
     @Override
-    public final boolean equals(Object o) {
+    public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null) return false;
-        Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
-        Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
-        if (thisEffectiveClass != oEffectiveClass) return false;
+        if (o == null || getClass() != o.getClass()) return false;
         NoGeoPointInArea that = (NoGeoPointInArea) o;
-        return id != null && Objects.equals(id, that.id);
+        return Double.compare(minLatitude, that.minLatitude) == 0 && Double.compare(maxLatitude, that.maxLatitude) == 0 && Double.compare(minLongitude, that.minLongitude) == 0 && Double.compare(maxLongitude, that.maxLongitude) == 0 && Objects.equals(date, that.date) && Objects.equals(id, that.id);
     }
 
     @Override
-    public final int hashCode() {
-        return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    public int hashCode() {
+        return Objects.hash(date, minLatitude, maxLatitude, minLongitude, maxLongitude, id);
     }
 }
