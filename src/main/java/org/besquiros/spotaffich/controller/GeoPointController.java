@@ -18,8 +18,8 @@ public class GeoPointController {
         this.geoPointService = geoPointService;
     }
 
-    @GetMapping("/testFetchGeoPoint") // TODO: TO DELETE AFTER TESTING OR MAKE SURE ITS NOT EXPOSED
-    public void test() {
+    @GetMapping("/populateDatabase") // TODO: TO DELETE AFTER TESTING OR MAKE SURE ITS NOT EXPOSED
+    public void populateDatabase() {
         geoPointService.fetchAllGeoPoint();
     }
 

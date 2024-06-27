@@ -1,40 +1,25 @@
 package org.besquiros.spotaffich.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.commons.csv.CSVRecord;
+import org.besquiros.spotaffich.entity.City;
 import org.besquiros.spotaffich.entity.GeoPoint;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.lang.Double.parseDouble;
 
 public class DataNormalizer {
     private DataNormalizer() {
     }
 
 
-    public static List<GeoPoint> normalizeData(String cityName, JsonNode data) {
+    public static List<GeoPoint> normalizeData(City city, List<CSVRecord> csvRecordList) {
         List<GeoPoint> dataNormalized = new ArrayList<>();
-        JsonNode apiResultNode;
-        switch (cityName.toUpperCase()) {
-            case "BORDEAUX":
-                apiResultNode = data.get("results");
-                for (JsonNode result : apiResultNode) {
-                    dataNormalized.add(new GeoPoint(result.get("geo_point_2d").get("lat").asDouble(), result.get("geo_point_2d").get("lon").asDouble()));
-                }
-                break;
-            case "LE HAILAN":
-                apiResultNode = data.get("results");
-                for (JsonNode result : apiResultNode) {
-                    dataNormalized.add(new GeoPoint(result.get("geo_point").get("lat").asDouble(), result.get("geo_point").get("lon").asDouble()));
-                }
-                break;
-            case "TALENCE":
-                apiResultNode = data.get("results");
-                for (JsonNode result : apiResultNode) {
-                    dataNormalized.add(new GeoPoint(result.get("coordonnees_").get("lat").asDouble(), result.get("coordonnees_").get("lon").asDouble()));
-                }
-                break;
+        for (CSVRecord row : csvRecordList) {
+            String[] latandLongCoords = row.get(city.getTargetedLatLongCSVColumn()).split(",");
+            dataNormalized.add(new GeoPoint(parseDouble(latandLongCoords[0]), parseDouble(latandLongCoords[1])));
         }
-
         return dataNormalized;
     }
 }

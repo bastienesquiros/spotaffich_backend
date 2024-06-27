@@ -1,10 +1,14 @@
 package org.besquiros.spotaffich.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.besquiros.spotaffich.entity.City;
 import org.besquiros.spotaffich.entity.GeoPoint;
 import org.besquiros.spotaffich.entity.NoGeoPointInArea;
+import org.besquiros.spotaffich.repository.CityRepository;
 import org.besquiros.spotaffich.repository.GeoPointRepository;
 import org.besquiros.spotaffich.repository.NoGeoPointInAreaRepository;
 import org.besquiros.spotaffich.util.GeoUtil;
@@ -18,6 +22,9 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.net.URL;
 import java.util.*;
 
 
@@ -27,52 +34,40 @@ public class GeoPointService {
     private static final Logger logger = LogManager.getLogger(GeoPointService.class);
     private final GeoPointRepository geoPointRepository;
     private final NoGeoPointInAreaRepository noGeoPointInAreaRepository;
-
+    private final CityRepository cityRepository;
     private final Environment env;
 
-    public GeoPointService(GeoPointRepository geoPointRepository, Environment env, NoGeoPointInAreaRepository noGeoPointInAreaRepository) {
+    public GeoPointService(GeoPointRepository geoPointRepository, Environment env, NoGeoPointInAreaRepository noGeoPointInAreaRepository, CityRepository cityRepository) {
         this.geoPointRepository = geoPointRepository;
         this.noGeoPointInAreaRepository = noGeoPointInAreaRepository;
+        this.cityRepository = cityRepository;
         this.env = env;
     }
 
-    // TODO: Add the most possible APIs
+    // TODO: Add the most possible data
     public void fetchAllGeoPoint() {
-        Map<String, String> citiesApisMap = populateCitiesApisMap();
-        List<List<GeoPoint>> dataToPersist = new ArrayList<>();
-        RestTemplate restTemplate = new RestTemplate();
-        JsonNode callResult;
-        boolean allCallsDone = true;
-
-        for (Map.Entry<String, String> city : citiesApisMap.entrySet()) {
+        List<City> cityList = cityRepository.findAll();
+        List<List<GeoPoint>> geoPointListToPersist = new ArrayList<>();
+        boolean allDataRetrieved = true;
+        for (City city : cityList) {
             try {
-                callResult = restTemplate.getForObject(city.getValue(), JsonNode.class);
-                if (callResult != null && !callResult.isEmpty()) {
-                    dataToPersist.add(DataNormalizer.normalizeData(city.getKey(), callResult));
-                } else {
-                    logger.warn("No data found for city: " + city.getKey());
-                    allCallsDone = false;
-                }
+                URL downloadDataURL = new URL(city.getDataDownloadLink());
+                Reader dataReader = new InputStreamReader(downloadDataURL.openStream());
+                CSVFormat csvFormat = CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).setDelimiter(';').setTrim(true).build();
+                CSVParser csvParser = new CSVParser(dataReader, csvFormat);
+                geoPointListToPersist.add(DataNormalizer.normalizeData(city, csvParser.getRecords()));
+                dataReader.close();
+                csvParser.close();
             } catch (Exception e) {
-                logger.error("Error happened data handling for city: " + city.getKey() + " " + e);
+                logger.error("Error while getting data from: " + city.getCityName() + " - " + e.getMessage());
                 e.printStackTrace();
-                allCallsDone = false;
-
+                allDataRetrieved = false;
+            }
+            if (allDataRetrieved) {
+                persistGeoPoint(geoPointListToPersist);
             }
         }
-        if (allCallsDone) {
-            persistGeoPoint(dataToPersist);
-        }
     }
-
-    private Map<String, String> populateCitiesApisMap() {
-        Map<String, String> citiesApisMap = new HashMap<>();
-        citiesApisMap.put("BORDEAUX", "https://opendata.bordeaux-metropole.fr/api/explore/v2.1/catalog/datasets/bor_sigpanneaux/records?limit=-1");
-        citiesApisMap.put("LE HAILAN", "https://opendata.bordeaux-metropole.fr/api/explore/v2.1/catalog/datasets/leh_panneaux_affichage_libre/records?limit=-1");
-        citiesApisMap.put("TALENCE", "https://opendata.bordeaux-metropole.fr/api/explore/v2.1/catalog/datasets/tal_panneaux_affichage_libre/records?limit=-1");
-        return citiesApisMap;
-    }
-
 
     // TODO: VERIFY IF THIS CAUSES PERFORMANCE ISSUES
     public void persistGeoPoint(List<List<GeoPoint>> geoPointFetchedData) {
@@ -111,11 +106,11 @@ public class GeoPointService {
         if (!pointsToDelete.isEmpty()) {
             geoPointRepository.deleteAll(pointsToDelete);
         }
-        populateGeoPointAddress();
-        retrieveGeoPointStreetPicture();
+        findAndPersistGeoPointAddress();
+        findAndPersistGeoPointStreetPicture();
     }
 
-    public void populateGeoPointAddress() {
+    public void findAndPersistGeoPointAddress() {
         List<GeoPoint> geoPointList = geoPointRepository.findAll();
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -141,7 +136,7 @@ public class GeoPointService {
     }
 
     // TODO: Change save path IN PROD
-    public void retrieveGeoPointStreetPicture() {
+    public void findAndPersistGeoPointStreetPicture() {
         List<GeoPoint> geoPointList = geoPointRepository.findAll();
         RestTemplate restTemplate = new RestTemplate();
 
