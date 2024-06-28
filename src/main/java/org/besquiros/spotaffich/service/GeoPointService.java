@@ -64,9 +64,9 @@ public class GeoPointService {
                 e.printStackTrace();
                 allDataRetrieved = false;
             }
-            if (allDataRetrieved) {
-                persistGeoPoint(geoPointListToPersist);
-            }
+        }
+        if (allDataRetrieved) {
+            persistGeoPoint(geoPointListToPersist);
         }
     }
 
@@ -76,7 +76,7 @@ public class GeoPointService {
 
         Map<String, GeoPoint> geoPointsInDatabaseMap = new HashMap<>();
         for (GeoPoint geoPoint : geoPointsAlreadyInDatabase) {
-            String key = geoPoint.getLongitude() + "_" + geoPoint.getLatitude();
+            String key = geoPoint.getLatitude() + "," + geoPoint.getLongitude();
             geoPointsInDatabaseMap.put(key, geoPoint);
         }
 
@@ -85,7 +85,7 @@ public class GeoPointService {
 
         for (List<GeoPoint> geoPointFetchedList : geoPointFetchedData) {
             for (GeoPoint geoPointFetched : geoPointFetchedList) {
-                String key = geoPointFetched.getLongitude() + "_" + geoPointFetched.getLatitude();
+                String key = geoPointFetched.getLatitude() + "," + geoPointFetched.getLongitude();
                 fetchedGeoPointsKeys.add(key);
                 if (!geoPointsInDatabaseMap.containsKey(key) && !pointsToSave.contains(geoPointFetched)) {
                     pointsToSave.add(geoPointFetched);
