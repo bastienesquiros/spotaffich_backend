@@ -87,7 +87,7 @@ public class GeoPointService {
             for (GeoPoint geoPointFetched : geoPointFetchedList) {
                 String key = geoPointFetched.getLongitude() + "_" + geoPointFetched.getLatitude();
                 fetchedGeoPointsKeys.add(key);
-                if (!geoPointsInDatabaseMap.containsKey(key)) {
+                if (!geoPointsInDatabaseMap.containsKey(key) && !pointsToSave.contains(geoPointFetched)) {
                     pointsToSave.add(geoPointFetched);
                 }
             }
@@ -105,6 +105,10 @@ public class GeoPointService {
         }
 
         if (!pointsToDelete.isEmpty()) {
+            for (GeoPoint geoPointToDelete : pointsToDelete) {
+                File pictureToDelete = new File(env.getProperty("picture_folder") + geoPointToDelete.getId() + ".jpg");
+                pictureToDelete.delete();
+            }
             geoPointRepository.deleteAll(pointsToDelete);
         }
         findAndPersistGeoPointAddress();
