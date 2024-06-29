@@ -20,12 +20,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.net.URI;
-import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 
@@ -51,17 +50,13 @@ public class GeoPointService {
         List<List<GeoPoint>> geoPointListToPersist = new ArrayList<>();
         boolean allDataRetrieved = true;
         for (City city : cityList) {
-            try {
-                URL downloadDataURL = new URI(city.getDataDownloadLink()).toURL();
-                Reader dataReader = new InputStreamReader(downloadDataURL.openStream());
+            try (Reader dataReader = new InputStreamReader(new URI(city.getDataDownloadLink()).toURL().openStream())) {
                 CSVFormat csvFormat = CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).setDelimiter(';').setTrim(true).build();
                 CSVParser csvParser = new CSVParser(dataReader, csvFormat);
                 geoPointListToPersist.add(DataNormalizer.normalizeData(city, csvParser.getRecords()));
-                dataReader.close();
                 csvParser.close();
             } catch (Exception e) {
-                logger.error("Error while getting data from: " + city.getCityName() + " - " + e.getMessage());
-                e.printStackTrace();
+                logger.error("Error while getting data from: {}", city.getCityName(), e);
                 allDataRetrieved = false;
             }
         }
@@ -106,8 +101,13 @@ public class GeoPointService {
 
         if (!pointsToDelete.isEmpty()) {
             for (GeoPoint geoPointToDelete : pointsToDelete) {
-                File pictureToDelete = new File(env.getProperty("picture_folder") + geoPointToDelete.getId() + ".jpg");
-                pictureToDelete.delete();
+                Path pictureToDeletePath = null;
+                try {
+                    pictureToDeletePath = Paths.get(env.getProperty("picture_folder") + geoPointToDelete.getId() + ".jpg");
+                    Files.delete(pictureToDeletePath);
+                } catch (IOException e) {
+                    logger.warn("Deletion failed for file: {}", pictureToDeletePath.getFileName(), e);
+                }
             }
             geoPointRepository.deleteAll(pointsToDelete);
         }
@@ -116,13 +116,13 @@ public class GeoPointService {
     }
 
     public void findAndPersistGeoPointAddress() {
-        List<GeoPoint> geoPointList = geoPointRepository.findAll();
+        List<GeoPoint> geoPointListWithoutAddress = geoPointRepository.findByAddressIsNull();
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", env.getProperty("RADAR_API_KEY"));
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
-        for (GeoPoint geoPoint : geoPointList) {
+        for (GeoPoint geoPoint : geoPointListWithoutAddress) {
             if (geoPoint.getAddress() == null || geoPoint.getAddress().isEmpty()) {
                 String url = String.format("https://api.radar.io/v1/geocode/reverse?coordinates=%f,%f", geoPoint.getLatitude(), geoPoint.getLongitude());
 
@@ -133,7 +133,7 @@ public class GeoPointService {
                         geoPoint.setAddress(response.getBody().get("addresses").get(0).get("formattedAddress").asText());
                     }
                 } catch (Exception e) {
-                    logger.error("Error during RADAR.IO API call: " + e.getMessage());
+                    logger.error("Error during RADAR.IO API call for id: {}", geoPoint.getId(), e);
                 }
                 geoPointRepository.save(geoPoint);
             }
@@ -142,29 +142,29 @@ public class GeoPointService {
 
     // TODO: Change save path IN PROD
     public void findAndPersistGeoPointStreetPicture() {
-        List<GeoPoint> geoPointList = geoPointRepository.findAll();
+        List<GeoPoint> geoPointListWithoutPicture = geoPointRepository.findByPicturePathIsNull();
         RestTemplate restTemplate = new RestTemplate();
 
-        for (GeoPoint geoPoint : geoPointList) {
+        for (GeoPoint geoPoint : geoPointListWithoutPicture) {
             if (geoPoint.getPicturePath() == null || geoPoint.getPicturePath().isEmpty()) {
                 try {
                     String url = String.format("https://maps.googleapis.com/maps/api/streetview?location=%f,%f&return_error_code=true&size=600x400&key=%s", geoPoint.getLatitude(), geoPoint.getLongitude(), env.getProperty("GOOGLE_API_KEY"));
                     ResponseEntity<byte[]> response = restTemplate.getForEntity(url, byte[].class);
-                    if (response.getStatusCode().value() != 400) {
-                        try {
+                    if (response.getStatusCode().value() == 200) {
+                        File pictureToSave = new File(env.getProperty("picture_folder") + geoPoint.getId() + ".jpg");
+                        try (FileOutputStream fos = new FileOutputStream(pictureToSave)) {
                             byte[] imageBytes = response.getBody();
-                            File pictureToSave = new File(env.getProperty("picture_folder") + geoPoint.getId() + ".jpg");
-                            FileOutputStream fos = new FileOutputStream(pictureToSave);
-                            fos.write(imageBytes);
-                            fos.close();
+                            if (imageBytes != null) {
+                                fos.write(imageBytes);
+                            }
                             geoPoint.setPicturePath(pictureToSave.getPath());
                             geoPointRepository.save(geoPoint);
                         } catch (Exception e) {
-                            logger.error("Error while creating StreetView picture");
+                            logger.error("Error while creating StreetView picture for id: {}", geoPoint.getId(), e);
                         }
                     }
                 } catch (Exception e) {
-                    logger.error("Error during Google Maps API call: " + e.getMessage());
+                    logger.error("Error during Google Maps API call for id: {}", geoPoint.getId(), e);
                 }
             }
         }

@@ -21,8 +21,8 @@ public class ScheduledTask {
 
     @Scheduled(fixedRate = THREE_MONTHS_IN_MILLISECONDS)
     public void performTask() {
-        logger.info("Task started at " + LocalDateTime.now());
+        logger.info("Task started at: {}", LocalDateTime.now());
         geoPointService.fetchAllGeoPoint();
-        logger.info("Task ended at " + LocalDateTime.now());
+        logger.info("Task ended at: {}", LocalDateTime.now());
     }
 }

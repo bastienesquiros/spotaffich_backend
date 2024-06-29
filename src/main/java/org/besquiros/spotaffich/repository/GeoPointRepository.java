@@ -10,4 +10,8 @@ import java.util.List;
 public interface GeoPointRepository extends JpaRepository<GeoPoint, BigInteger> {
    @Query("SELECT new GeoPoint(g.latitude, g.longitude) FROM GeoPoint g")
    List<GeoPoint> findAllLatitudeAndLongitude();
+
+   List<GeoPoint> findByAddressIsNull();
+
+   List<GeoPoint> findByPicturePathIsNull();
 }
