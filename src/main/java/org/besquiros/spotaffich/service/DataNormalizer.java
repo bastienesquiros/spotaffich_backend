@@ -17,8 +17,8 @@ public class DataNormalizer {
     public static List<GeoPoint> normalizeData(City city, List<CSVRecord> csvRecordList) {
         List<GeoPoint> dataNormalized = new ArrayList<>();
         for (CSVRecord row : csvRecordList) {
-            if (!row.get(city.getTargetedLatLongCSVColumn()).isEmpty()) {
-                String[] latandLongCoords = row.get(city.getTargetedLatLongCSVColumn()).split(",");
+            if (!row.get(city.getTargetedLatLongCSVColumnPosition()).isEmpty()) {
+                String[] latandLongCoords = row.get(city.getTargetedLatLongCSVColumnPosition()).split(",");
                 dataNormalized.add(new GeoPoint(parseDouble(latandLongCoords[0]), parseDouble(latandLongCoords[1])));
             }
         }

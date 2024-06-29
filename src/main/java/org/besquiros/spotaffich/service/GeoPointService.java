@@ -3,7 +3,6 @@ package org.besquiros.spotaffich.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
-import org.apache.commons.io.input.BOMInputStream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.besquiros.spotaffich.entity.City;
@@ -23,7 +22,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.*;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -52,8 +50,8 @@ public class GeoPointService {
         List<List<GeoPoint>> geoPointListToPersist = new ArrayList<>();
         boolean allDataRetrieved = true;
         for (City city : cityList) {
-            try (Reader dataReader = new InputStreamReader(new BOMInputStream(new URI(city.getDataDownloadLink()).toURL().openStream()), StandardCharsets.UTF_8)) {
-                CSVFormat csvFormat = CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).setDelimiter(';').setTrim(true).build();
+            try (Reader dataReader = new InputStreamReader(new URI(city.getDataDownloadLink()).toURL().openStream())) {
+                CSVFormat csvFormat = CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).setDelimiter(city.getTargetedCSVDelimiter()).setTrim(true).build();
                 CSVParser csvParser = new CSVParser(dataReader, csvFormat);
                 geoPointListToPersist.add(DataNormalizer.normalizeData(city, csvParser.getRecords()));
                 csvParser.close();

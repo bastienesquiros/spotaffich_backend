@@ -20,8 +20,10 @@ public class City {
     private String cityName;
     @Column(nullable = false)
     private String dataDownloadLink;
-    @Column(name = "targeted_lat_long_csv_column",nullable = false)
-    private String targetedLatLongCSVColumn;
+    @Column(name = "targeted_lat_long_csv_column_position",nullable = false)
+    private Integer targetedLatLongCSVColumnPosition;
+    @Column(name = "targeted_csv_delimiter", nullable = false)
+    private String targetedCSVDelimiter;
 
     @Override
     public boolean equals(Object o) {
