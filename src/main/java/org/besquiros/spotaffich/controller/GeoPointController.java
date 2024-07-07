@@ -1,13 +1,16 @@
 package org.besquiros.spotaffich.controller;
 
+import jakarta.validation.constraints.NotBlank;
 import org.besquiros.spotaffich.entity.GeoPoint;
 import org.besquiros.spotaffich.service.GeoPointService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@Validated
 @RequestMapping("/geopoint")
 public class GeoPointController {
 
@@ -24,10 +27,7 @@ public class GeoPointController {
     }
 
     @PostMapping("/findUserProximityGeoPoint")
-    public ResponseEntity<List<GeoPoint>> findUserProximityGeoPoint(@RequestBody Double userLatitude, Double userLongitude) {
-        if (userLatitude == null || userLongitude == null) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<List<GeoPoint>> findUserProximityGeoPoint(@RequestBody @NotBlank Double userLatitude, @NotBlank Double userLongitude) {
         List<GeoPoint> nearbyGeoPoints = geoPointService.findUserProximityGeoPoint(userLatitude, userLongitude);
         return ResponseEntity.ok(nearbyGeoPoints);
     }
